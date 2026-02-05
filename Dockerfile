@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY main.py .
+COPY model.py .
 COPY best_leukemia_model_weights.pth .
 COPY mobile_interface.html .
 
