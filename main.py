@@ -4,15 +4,17 @@ Serves MobileNetV3-Large model trained on C-NMC dataset
 """
 
 import io
-import torch
-import torch.nn as nn
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image
-from torchvision import models, transforms
 from typing import Dict
+
+import torch
 import uvicorn
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from PIL import Image
+from torchvision import transforms
+
+from model import create_model
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -45,25 +47,14 @@ def load_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # Load the model architecture (same as notebook)
-    model = models.mobilenet_v3_large(weights=None)
-
-    # Modify classifier head (same structure as training)
-    num_ftrs = model.classifier[3].in_features
-    model.classifier[3] = nn.Sequential(
-        nn.BatchNorm1d(num_ftrs),
-        nn.Linear(num_ftrs, 256),
-        nn.ReLU(),
-        nn.Dropout(p=0.45),
-        nn.Linear(256, 2),
-    )
+    # Load the model architecture using shared create_model function
+    model = create_model(device)
 
     # Load trained weights
     try:
         model.load_state_dict(
             torch.load("best_leukemia_model_weights.pth", map_location=device)
         )
-        model = model.to(device)
         model.eval()
         print("✓ Model loaded successfully")
     except FileNotFoundError:
