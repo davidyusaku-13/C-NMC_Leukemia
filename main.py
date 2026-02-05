@@ -7,6 +7,7 @@ import io
 import torch
 import torch.nn as nn
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from torchvision import models, transforms
@@ -95,10 +96,17 @@ async def root():
         "model": "MobileNetV3-Large",
         "classes": class_names,
         "endpoints": {
+            "/mobile": "GET - Mobile web interface",
             "/predict": "POST - Upload image for classification",
             "/health": "GET - Check API health",
         },
     }
+
+
+@app.get("/mobile")
+async def mobile_interface():
+    """Serve the mobile web interface"""
+    return FileResponse("mobile_interface.html", media_type="text/html")
 
 
 @app.get("/health")

@@ -12,12 +12,16 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first (for better caching)
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install PyTorch CPU-only first (much smaller than CUDA version)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install other Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY main.py .
 COPY best_leukemia_model_weights.pth .
+COPY mobile_interface.html .
 
 # Expose port
 EXPOSE 8000

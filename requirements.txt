@@ -3,9 +3,9 @@ pandas==2.2.3
 numpy==2.2.3
 pathlib
 
-# Deep Learning
-torch>=2.0.0
-torchvision>=0.15.0
+# Deep Learning (installed separately in Dockerfile for CPU-only)
+# torch>=2.0.0
+# torchvision>=0.15.0
 pillow>=10.0.0
 
 # Visualization (for notebook)
