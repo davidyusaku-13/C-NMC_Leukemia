@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leukemia Cell Classifier</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 24px;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 30px;
+      }
+
+      .upload-area {
+        border: 3px dashed #667eea;
+        border-radius: 15px;
+        padding: 40px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+      }
+
+      .upload-area:hover {
+        background: #f8f9ff;
+        border-color: #764ba2;
+      }
+
+      .upload-area.dragover {
+        background: #f0f4ff;
+        border-color: #5568d3;
+      }
+
+      .upload-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      button {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .preview {
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      .preview img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9ff;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .result.show {
+        display: block;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .result-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .prediction {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 15px 0;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .prediction.normal {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .prediction.leukemia {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .confidence {
+        text-align: center;
+        font-size: 18px;
+        color: #666;
+        margin: 10px 0;
+      }
+
+      .probabilities {
+        margin-top: 15px;
+      }
+
+      .prob-bar {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+      }
+
+      .prob-label {
+        width: 120px;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .prob-progress {
+        flex: 1;
+        height: 25px;
+        background: #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 0 10px;
+      }
+
+      .prob-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.5s ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 8px;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .error.show {
+        display: block;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-top: 10px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔬 Leukemia Cell Classifier</h1>
+      <p class="subtitle">Upload a microscopy image for AI analysis</p>
+
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <p><strong>Click to upload</strong> or drag and drop</p>
+        <p style="font-size: 12px; color: #999; margin-top: 5px">
+          BMP, PNG, JPG supported
+        </p>
+      </div>
+
+      <input type="file" id="fileInput" accept="image/*" />
+
+      <div class="preview" id="preview"></div>
+
+      <button id="predictBtn" disabled>Analyze Image</button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Analyzing image...</p>
+      </div>
+
+      <div class="result" id="result">
+        <div class="result-title">📊 Analysis Results</div>
+        <div class="prediction" id="prediction"></div>
+        <div class="confidence" id="confidence"></div>
+        <div class="probabilities">
+          <div class="prob-bar">
+            <span class="prob-label">HEM (Normal)</span>
+            <div class="prob-progress">
+              <div class="prob-fill" id="hemBar"></div>
+            </div>
+          </div>
+          <div class="prob-bar">
+            <span class="prob-label">ALL (Leukemia)</span>
+            <div class="prob-progress">
+              <div class="prob-fill" id="allBar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="info">
+        🎯 AI-powered classification using MobileNetV3-Large
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8000"; // Change this to your server IP
+
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const preview = document.getElementById("preview");
+      const predictBtn = document.getElementById("predictBtn");
+      const loading = document.getElementById("loading");
+      const result = document.getElementById("result");
+      const error = document.getElementById("error");
+
+      let selectedFile = null;
+
+      // Click to upload
+      uploadArea.addEventListener("click", () => fileInput.click());
+
+      // Drag and drop
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+          handleFile(file);
+        }
+      });
+
+      // File selection
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+      });
+
+      function handleFile(file) {
+        selectedFile = file;
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+
+        // Enable predict button
+        predictBtn.disabled = false;
+        result.classList.remove("show");
+        error.classList.remove("show");
+      }
+
+      // Predict
+      predictBtn.addEventListener("click", async () => {
+        if (!selectedFile) return;
+
+        // Show loading
+        loading.classList.add("show");
+        result.classList.remove("show");
+        error.classList.remove("show");
+        predictBtn.disabled = true;
+
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const response = await fetch(`${API_URL}/predict`, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          displayResults(data);
+        } catch (err) {
+          showError(
+            `Error: ${err.message}. Make sure the API server is running at ${API_URL}`,
+          );
+        } finally {
+          loading.classList.remove("show");
+          predictBtn.disabled = false;
+        }
+      });
+
+      function displayResults(data) {
+        const predictionDiv = document.getElementById("prediction");
+        const confidenceDiv = document.getElementById("confidence");
+        const hemBar = document.getElementById("hemBar");
+        const allBar = document.getElementById("allBar");
+
+        // Set prediction
+        predictionDiv.textContent = data.prediction;
+        predictionDiv.className =
+          "prediction " + (data.class_id === 0 ? "normal" : "leukemia");
+
+        // Set confidence
+        confidenceDiv.textContent = `Confidence: ${data.confidence}%`;
+
+        // Set probability bars
+        const hemProb = data.probabilities["HEM (Normal)"];
+        const allProb = data.probabilities["ALL (Leukemia)"];
+
+        hemBar.style.width = hemProb + "%";
+        hemBar.textContent = hemProb + "%";
+
+        allBar.style.width = allProb + "%";
+        allBar.textContent = allProb + "%";
+
+        // Show result
+        result.classList.add("show");
+      }
+
+      function showError(message) {
+        error.textContent = message;
+        error.classList.add("show");
+      }
+    </script>
+  </body>
+</html>
