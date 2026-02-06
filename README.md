@@ -327,6 +327,7 @@ BATCH_SIZE = 40             # Batch size
 NUM_EPOCHS = 40             # Max epochs
 LEARNING_RATE = 0.001       # Initial LR
 WEIGHT_DECAY = 1e-3         # L2 regularization
+ACCURACY_THRESHOLD = 0.90   # Switch from train_acc to val_loss monitoring
 ```
 
 ### Change Data Augmentation

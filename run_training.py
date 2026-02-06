@@ -33,6 +33,7 @@ BATCH_SIZE = 40
 NUM_EPOCHS = 40
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 1e-3
+ACCURACY_THRESHOLD = 0.90
 WEIGHTS_SAVE_PATH = "best_leukemia_model_weights.pth"
 
 # ============ Main Execution ============
@@ -137,6 +138,7 @@ if __name__ == "__main__":
         val_loader=val_loader,
         num_epochs=NUM_EPOCHS,
         device=device,
+        threshold=ACCURACY_THRESHOLD,
     )
     print("=" * 60)
     print("TRAINING COMPLETE")
