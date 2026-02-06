@@ -92,7 +92,7 @@ class CustomCallback:
         # Dual monitoring logic
         if train_acc < self.threshold:
             # Phase 1: Monitor training accuracy
-            monitor = "accuracy"
+            monitor = "train_acc"
             if train_acc > self.highest_tracc:
                 self.highest_tracc = train_acc
                 self.best_weights = copy.deepcopy(self.model.state_dict())
@@ -154,6 +154,7 @@ def train_model(
     val_loader,
     num_epochs=40,
     device=None,
+    threshold=0.9,
 ) -> Tuple[nn.Module, Dict]:
     """
     Main training loop with callback system.
@@ -166,13 +167,14 @@ def train_model(
         val_loader: DataLoader - Validation data
         num_epochs: int - Maximum number of epochs
         device: torch.device - Device to train on
+        threshold: float - Accuracy threshold before switching to val_loss monitoring
 
     Returns:
         model: nn.Module - Trained model with best weights
         history: Dict - Training history (losses and accuracies)
     """
     callback = CustomCallback(
-        model, optimizer, patience=1, stop_patience=3, threshold=0.9, factor=0.5
+        model, optimizer, patience=1, stop_patience=3, threshold=threshold, factor=0.5
     )
     callback.on_train_begin()
 

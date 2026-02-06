@@ -3,6 +3,7 @@
 ## 🔬 Overview
 
 This project implements a deep learning model to classify leukemia cells from the **C-NMC (Cancer-NMC) dataset**. The model distinguishes between:
+
 - **ALL (Acute Lymphoblastic Leukemia)** - Cancerous cells (Label 1)
 - **HEM (Normal/Healthy)** - Normal cells (Label 0)
 
@@ -35,14 +36,14 @@ C-NMC_Leukemia/
 
 ### File Descriptions
 
-| File | Purpose |
-|------|---------|
-| **`data.py`** | Data loading from `training_data/`, stratified splitting (70/15/15), `LeukemiaDataset` class, transforms, visualization helpers |
-| **`model.py`** | Creates MobileNetV3-Large with custom classifier head (BN → Dense(256) → ReLU → Dropout(0.45) → Dense(2)) |
-| **`training.py`** | `CustomCallback` class for dual-phase monitoring (accuracy → val_loss), LR scheduling, early stopping, `train_model()` function |
-| **`run_training.py`** | **Training entry point** - Orchestrates data loading, model creation, training, and history plotting |
-| **`evaluate.py`** | **Evaluation script** - Loads trained model, evaluates on validation/test sets, displays confusion matrices |
-| **`main.py`** | FastAPI server for inference (serves predictions via REST API) |
+| File                  | Purpose                                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **`data.py`**         | Data loading from `training_data/`, stratified splitting (70/15/15), `LeukemiaDataset` class, transforms, visualization helpers |
+| **`model.py`**        | Creates MobileNetV3-Large with custom classifier head (BN → Dense(256) → ReLU → Dropout(0.45) → Dense(2))                       |
+| **`training.py`**     | `CustomCallback` class for dual-phase monitoring (accuracy → val_loss), LR scheduling, early stopping, `train_model()` function |
+| **`run_training.py`** | **Training entry point** - Orchestrates data loading, model creation, training, and history plotting                            |
+| **`evaluate.py`**     | **Evaluation script** - Loads trained model, evaluates on validation/test sets, displays confusion matrices                     |
+| **`main.py`**         | FastAPI server for inference (serves predictions via REST API)                                                                  |
 
 ---
 
@@ -87,11 +88,13 @@ training_data/
 ```
 
 **Key Points:**
+
 - Images must be in `.bmp` format (or modify `glob("*.bmp")` in `data.py`)
 - The directory names `all/` and `hem/` are case-sensitive
 - Total expected images: ~10,661 (7,272 ALL, 3,389 HEM)
 
 **Dataset Split:**
+
 - **Training:** 70% (~7,462 images)
 - **Validation:** 15% (~1,599 images)
 - **Test:** 15% (~1,600 images)
@@ -111,6 +114,7 @@ python run_training.py
 ```
 
 **What happens:**
+
 1. Loads data from `training_data/`
 2. Creates stratified train/val/test splits
 3. Builds MobileNetV3-Large with custom classifier
@@ -124,6 +128,7 @@ python run_training.py
 **Expected Duration:** ~40-50 minutes (depends on hardware)
 
 **Console Output Example:**
+
 ```
 ============================================================
 Leukemia Classification Training
@@ -157,12 +162,14 @@ python evaluate.py
 ```
 
 **What happens:**
+
 1. Automatically finds the most recent `.pth` weights file
 2. Loads trained model
 3. Evaluates on validation set (displays classification report + confusion matrix)
 4. Evaluates on test set (displays classification report + confusion matrix)
 
 **Expected Metrics:**
+
 - **Validation Accuracy:** ~94-95%
 - **Test Accuracy:** ~94-95%
 - **Precision/Recall:** Balanced for both classes
@@ -178,6 +185,7 @@ python main.py
 ```
 
 **Endpoints:**
+
 - `GET /` - API information
 - `GET /health` - Health check
 - `GET /mobile` - Mobile web interface
@@ -192,6 +200,7 @@ curl -X POST "http://localhost:8000/predict" \
 ```
 
 **Response:**
+
 ```json
 {
   "prediction": "ALL (Leukemia)",
@@ -213,11 +222,13 @@ Visit `http://localhost:8000/mobile` in a browser to use the web-based uploader.
 ## 🏗️ Model Architecture
 
 ### Backbone: MobileNetV3-Large
+
 - Pre-trained on ImageNet (1000 classes)
 - Efficient for mobile/edge deployment
 - Input size: 224×224 RGB images
 
 ### Custom Classifier Head
+
 ```
 Input (960 features from backbone)
     ↓
@@ -234,25 +245,27 @@ Linear(256 → 2)  # Output: HEM (0) or ALL (1)
 
 ### Training Configuration
 
-| Hyperparameter | Value |
-|----------------|-------|
-| Optimizer | Adamax |
-| Learning Rate | 0.001 (initial) |
-| Weight Decay | 0.001 (L2 regularization) |
-| Batch Size | 40 |
-| Max Epochs | 40 (early stopping active) |
-| Loss Function | CrossEntropyLoss |
-| LR Reduction Factor | 0.5 |
-| Patience | 1 epoch |
-| Early Stopping | After 3 LR reductions |
+| Hyperparameter      | Value                      |
+| ------------------- | -------------------------- |
+| Optimizer           | Adamax                     |
+| Learning Rate       | 0.001 (initial)            |
+| Weight Decay        | 0.001 (L2 regularization)  |
+| Batch Size          | 40                         |
+| Max Epochs          | 40 (early stopping active) |
+| Loss Function       | CrossEntropyLoss           |
+| LR Reduction Factor | 0.5                        |
+| Patience            | 1 epoch                    |
+| Early Stopping      | After 3 LR reductions      |
 
 ### Data Augmentation (Training Only)
+
 - Random horizontal flip
 - Random vertical flip
 - Random rotation (±20°)
 - Color jitter (brightness, contrast, saturation, hue)
 
 ### Dual-Phase Monitoring
+
 1. **Phase 1:** Monitor training accuracy until it reaches 90%
 2. **Phase 2:** Switch to monitoring validation loss for generalization
 
@@ -262,17 +275,18 @@ Linear(256 → 2)  # Output: HEM (0) or ALL (1)
 
 ### Expected Results
 
-| Metric | Validation | Test |
-|--------|-----------|------|
-| Accuracy | 94-95% | 94-95% |
-| Precision (HEM) | ~93% | ~93% |
-| Precision (ALL) | ~96% | ~96% |
-| Recall (HEM) | ~91% | ~92% |
-| Recall (ALL) | ~97% | ~97% |
-| F1-Score (HEM) | ~92% | ~92% |
-| F1-Score (ALL) | ~96% | ~96% |
+| Metric          | Validation | Test   |
+| --------------- | ---------- | ------ |
+| Accuracy        | 94-95%     | 94-95% |
+| Precision (HEM) | ~93%       | ~93%   |
+| Precision (ALL) | ~96%       | ~96%   |
+| Recall (HEM)    | ~91%       | ~92%   |
+| Recall (ALL)    | ~97%       | ~97%   |
+| F1-Score (HEM)  | ~92%       | ~92%   |
+| F1-Score (ALL)  | ~96%       | ~96%   |
 
 ### Training Time
+
 - **Intel Arc B580:** ~40-50 minutes (40 epochs)
 - **NVIDIA RTX 3080:** ~30-40 minutes
 - **CPU (16 cores):** ~3-4 hours
@@ -351,6 +365,7 @@ model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
 ## 🤝 Contributing
 
 To improve this project:
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -382,3 +397,36 @@ For questions or issues, please open an issue on GitHub.
 ---
 
 **Happy Training! 🚀**
+
+---
+
+## 🌐 FastAPI (API) Quick Reference
+
+- Start locally: `python main.py` (serves on http://localhost:8000)
+- Start with Docker Compose: `docker-compose up --build` (exposes port 8000)
+- Key endpoints: `/` (info), `/health` (readiness), `/predict` (multipart file upload: BMP/PNG/JPG)
+- Test script: `python test_api.py`
+- Mobile access: use your machine IP (not localhost) e.g., `http://YOUR_IP:8000/docs`
+
+### Sample cURL
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+    -H "accept: application/json" \
+    -F "file=@cell_image.bmp"
+```
+
+## 🐳 Docker Notes (inference image)
+
+- Dockerfile copies `main.py`, `model.py`, `best_leukemia_model_weights.pth`, and `mobile_interface.html` to avoid missing imports inside the container.
+- Build/run manually:
+
+```bash
+docker build -t leukemia-api .
+docker run -p 8000:8000 leukemia-api
+```
+
+## 📓 Notebook Conversion Snapshot
+
+- `leukemia.ipynb` was split into modular scripts: `data.py`, `model.py`, `training.py`, `run_training.py`, `evaluate.py`, `main.py`, plus this README.
+- Typical flow: train with `run_training.py` → evaluate with `evaluate.py` → serve with `main.py`.
